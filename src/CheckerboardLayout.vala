@@ -549,6 +549,16 @@ public abstract class CheckerboardItem : ThumbnailView {
             ctx.restore();
         }
         
+        // draw a border for the cursor with the selection width and normal border color
+        if (is_cursor) {
+            ctx.save();
+            ctx.set_source_rgba(border_color.red, border_color.green, border_color.blue,
+                    border_color.alpha);
+            paint_border(ctx, pixbuf_dim, pixbuf_origin,
+                get_selection_border_width(int.max(pixbuf_dim.width, pixbuf_dim.height)));
+            ctx.restore();
+        }
+        
         // draw selection border
         if (is_selected()) {
             // border thickness depends on the size of the thumbnail

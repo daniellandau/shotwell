@@ -9,6 +9,8 @@ public class DataView : DataObject {
     private bool selected = false;
     private bool visible = true;
     
+    public bool is_cursor = false;
+    
     // Indicates that the selection state has changed.
     public virtual signal void state_changed(bool selected) {
     }

@@ -66,6 +66,7 @@ public class ViewCollection : DataCollection {
     private DataSet visible = null;
     private Gee.HashSet<DataView> frozen_views_altered = null;
     private Gee.HashSet<DataView> frozen_geometries_altered = null;
+    private DataView cursor_view = null;
     
     // TODO: source-to-view mapping ... for now, only one view is allowed for each source.
     // This may need to change in the future.
@@ -81,6 +82,22 @@ public class ViewCollection : DataCollection {
     
     // Signal aggregator.
     public virtual signal void items_state_changed(Gee.Iterable<DataView> changed) {
+    }
+    
+    public void set_cursor_view(DataView view) {
+        Gee.HashSet<DataView> collection = new Gee.HashSet<DataView>();
+        if (cursor_view != null) {
+            cursor_view.is_cursor = false;
+            collection.add(cursor_view);
+        }
+        view.is_cursor = true;
+        cursor_view = view;
+        collection.add(view);
+        notify_views_altered(collection);
+    }
+    
+    public DataView get_cursor_view() {
+        return cursor_view;
     }
     
     // This signal is fired when the selection in the view has changed in any capacity.  Items
