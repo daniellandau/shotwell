@@ -920,16 +920,55 @@ public class SearchFilterToolbar : Gtk.Toolbar {
             Resources.style_widget(button, stylesheet);
         }
     }
+
+    protected class SavedSearchFilterButton : Gtk.ToolItem {
+        public Gtk.Popover filter_popup = null;
+        public Gtk.Button button;
+        
+        public signal void clicked();
+        
+        public SavedSearchFilterButton() {
+            button = new Gtk.Button();
+            button.set_image(new Gtk.Image.from_icon_name(Gtk.Stock.FIND, Gtk.IconSize.SMALL_TOOLBAR));
+            button.set_can_focus(false);
+            
+            button.clicked.connect(on_clicked);
+            
+            restyle();
+            
+            set_homogeneous(false);
+            
+            this.add(button);
+        }
+        
+        ~SavedSearchFilterButton() {
+            button.clicked.disconnect(on_clicked);
+        }
+        
+        private void on_clicked() {
+            clicked();
+        }
+        
+        public void restyle() {
+            string bgcolorname =
+                Resources.to_css_color(Config.Facade.get_instance().get_bg_color());
+            string stylesheet = Resources.SEARCH_BUTTON_STYLESHEET_TEMPLATE.printf(bgcolorname);
+            
+            Resources.style_widget(button, stylesheet);
+        }
+    }
     
     public Gtk.UIManager ui = new Gtk.UIManager();
     
     private SearchFilterActions actions;
     private SearchBox search_box;
     private RatingFilterButton rating_button = new RatingFilterButton();
+    private SavedSearchFilterButton saved_search_button = new SavedSearchFilterButton();
     private SearchViewFilter? search_filter = null;
     private LabelToolItem label_type;
     private LabelToolItem label_flagged;
     private LabelToolItem label_rating;
+    private LabelToolItem label_saved_search;
     private ToggleActionToolButton toolbtn_photos;
     private ToggleActionToolButton toolbtn_videos;
     private ToggleActionToolButton toolbtn_raw;
@@ -1006,6 +1045,11 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         rating_button.set_expand(false);
         rating_button.clicked.connect(on_filter_button_clicked);
         insert(rating_button, -1);
+        
+        // Saved search label and button
+        label_saved_search = new LabelToolItem(_("Saved Search"));
+        insert(label_saved_search, -1);
+        insert(saved_search_button, -1);
         
         // Separator to right-align the text box
         Gtk.SeparatorToolItem separator_align = new Gtk.SeparatorToolItem();
