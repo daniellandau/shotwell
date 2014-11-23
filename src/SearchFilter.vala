@@ -922,7 +922,7 @@ public class SearchFilterToolbar : Gtk.Toolbar {
     }
 
     protected class SavedSearchFilterButton : Gtk.ToolItem {
-        public Gtk.Popover filter_popup = null;
+        public SavedSearchPopover filter_popup = null;
         public Gtk.Button button;
         
         public signal void clicked();
@@ -955,6 +955,22 @@ public class SearchFilterToolbar : Gtk.Toolbar {
             string stylesheet = Resources.SEARCH_BUTTON_STYLESHEET_TEMPLATE.printf(bgcolorname);
             
             Resources.style_widget(button, stylesheet);
+        }
+    }
+
+    protected class SavedSearchPopover {
+        private Gtk.Popover popover = null;
+        private Gtk.ListBox list_box = null;
+        public SavedSearchPopover(Gtk.Widget relative_to) {
+            popover = new Gtk.Popover(relative_to);
+            list_box = new Gtk.ListBox();
+            info("constructing popover");
+            list_box.insert(new Gtk.Label("hei"), -1);
+            popover.add(list_box);
+        }
+        
+        public void show_all() {
+            popover.show_all();
         }
     }
     
@@ -1049,6 +1065,9 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         // Saved search label and button
         label_saved_search = new LabelToolItem(_("Saved Search"));
         insert(label_saved_search, -1);
+        saved_search_button.filter_popup = new SavedSearchPopover(saved_search_button);
+        saved_search_button.set_expand(false);
+        saved_search_button.clicked.connect(on_saved_search_button_clicked);
         insert(saved_search_button, -1);
         
         // Separator to right-align the text box
@@ -1289,6 +1308,11 @@ public class SearchFilterToolbar : Gtk.Toolbar {
             Gtk.get_current_event_time());
     }
     
+    private void on_saved_search_button_clicked() {
+        info("saved search button clicked");
+        saved_search_button.filter_popup.show_all();
+    }
+
     public void take_focus() {
         search_box.get_focus();
     }
