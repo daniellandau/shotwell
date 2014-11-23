@@ -961,12 +961,58 @@ public class SearchFilterToolbar : Gtk.Toolbar {
     protected class SavedSearchPopover {
         private Gtk.Popover popover = null;
         private Gtk.ListBox list_box = null;
+        
+        public signal void edit_clicked(int64 saved_search_id);
+        public signal void delete_clicked(int64 saved_search_id);
+        public signal void add_clicked();
+
+        private class IndexedButton : Gtk.Bin {
+            private Gtk.Button button = null;
+            private int64 index;
+
+            public signal void clicked(int64 index);
+
+            public IndexedButton(int64 index, string label) {
+                button = new Gtk.Button.with_label(label);
+                this.index = index;
+                this.add(button);
+
+                button.clicked.connect(on_click);
+            }
+
+            private void on_click() {
+                clicked(this.index);
+            }
+        }
+        
         public SavedSearchPopover(Gtk.Widget relative_to) {
             popover = new Gtk.Popover(relative_to);
             list_box = new Gtk.ListBox();
             info("constructing popover");
-            list_box.insert(new Gtk.Label("hei"), -1);
+            string[] items = {"saved search 1", "saved search 2", "saved 3"};
+            for (int i = 0; i < items.length; ++i) {
+                Gtk.HBox row = new Gtk.HBox(true, 1);
+                row.pack_start(new Gtk.Label(items[i]));
+                
+                IndexedButton edit_button = new IndexedButton(i, "Edit");
+                row.pack_start(edit_button);
+                edit_button.clicked.connect(on_edit_click);
+                
+                IndexedButton delete_button = new IndexedButton(i, "Delete");
+                row.pack_start(delete_button);
+                delete_button.clicked.connect(on_delete_click);
+                list_box.insert(row, -1);
+            }
+            list_box.insert(new Gtk.Label("plus"), -1);
             popover.add(list_box);
+        }
+
+        private void on_edit_click(int64 index) {
+            edit_clicked(index);
+        }
+        
+        private void on_delete_click(int64 index) {
+            delete_clicked(index);
         }
         
         public void show_all() {
@@ -1066,6 +1112,8 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         label_saved_search = new LabelToolItem(_("Saved Search"));
         insert(label_saved_search, -1);
         saved_search_button.filter_popup = new SavedSearchPopover(saved_search_button);
+        saved_search_button.filter_popup.edit_clicked.connect((i) => debug("clicked i = "+i.to_string() ));
+        saved_search_button.filter_popup.delete_clicked.connect((i) => debug("clicked i = "+i.to_string() ));
         saved_search_button.set_expand(false);
         saved_search_button.clicked.connect(on_saved_search_button_clicked);
         insert(saved_search_button, -1);
