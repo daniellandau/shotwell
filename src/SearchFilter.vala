@@ -961,6 +961,8 @@ public class SearchFilterToolbar : Gtk.Toolbar {
     protected class SavedSearchPopover {
         private Gtk.Popover popover = null;
         private Gtk.ListBox list_box = null;
+        private IndexedButton[] edit_buttons = null;
+        private IndexedButton[] delete_buttons = null;
         
         public signal void edit_clicked(int64 saved_search_id);
         public signal void delete_clicked(int64 saved_search_id);
@@ -980,6 +982,10 @@ public class SearchFilterToolbar : Gtk.Toolbar {
                 button.clicked.connect(on_click);
             }
 
+            ~IndexedButton() {
+                button.clicked.disconnect(on_click);
+            }
+
             private void on_click() {
                 clicked(this.index);
             }
@@ -988,8 +994,13 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         public SavedSearchPopover(Gtk.Widget relative_to) {
             popover = new Gtk.Popover(relative_to);
             list_box = new Gtk.ListBox();
+            edit_buttons = new IndexedButton[0];
+            delete_buttons = new IndexedButton[0];
             info("constructing popover");
-            string[] items = {"saved search 1", "saved search 2", "saved 3"};
+
+            string[] items = new string[0];
+            foreach (SavedSearch search in SavedSearchTable.get_instance().get_all())
+                items += search.get_name();
             for (int i = 0; i < items.length; ++i) {
                 Gtk.HBox row = new Gtk.HBox(true, 1);
                 row.pack_start(new Gtk.Label(items[i]));
@@ -997,14 +1008,21 @@ public class SearchFilterToolbar : Gtk.Toolbar {
                 IndexedButton edit_button = new IndexedButton(i, "Edit");
                 row.pack_start(edit_button);
                 edit_button.clicked.connect(on_edit_click);
+                edit_buttons += edit_button;
                 
                 IndexedButton delete_button = new IndexedButton(i, "Delete");
                 row.pack_start(delete_button);
                 delete_button.clicked.connect(on_delete_click);
+                delete_buttons += delete_button;
                 list_box.insert(row, -1);
             }
             list_box.insert(new Gtk.Label("plus"), -1);
             popover.add(list_box);
+        }
+
+        ~SavedSearchPopover() {
+            foreach (IndexedButton button in edit_buttons) button.clicked.disconnect(on_edit_click);
+            foreach (IndexedButton button in delete_buttons) button.clicked.disconnect(on_delete_click);
         }
 
         private void on_edit_click(int64 index) {
@@ -1111,9 +1129,6 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         // Saved search label and button
         label_saved_search = new LabelToolItem(_("Saved Search"));
         insert(label_saved_search, -1);
-        saved_search_button.filter_popup = new SavedSearchPopover(saved_search_button);
-        saved_search_button.filter_popup.edit_clicked.connect((i) => debug("clicked i = "+i.to_string() ));
-        saved_search_button.filter_popup.delete_clicked.connect((i) => debug("clicked i = "+i.to_string() ));
         saved_search_button.set_expand(false);
         saved_search_button.clicked.connect(on_saved_search_button_clicked);
         insert(saved_search_button, -1);
@@ -1356,8 +1371,19 @@ public class SearchFilterToolbar : Gtk.Toolbar {
             Gtk.get_current_event_time());
     }
     
+    private void debugSignal(int64 i) {
+      debug("clicked i = "+i.to_string());
+    }
+
     private void on_saved_search_button_clicked() {
         info("saved search button clicked");
+        if (saved_search_button.filter_popup != null) {
+          saved_search_button.filter_popup.edit_clicked.disconnect(debugSignal);
+          saved_search_button.filter_popup.delete_clicked.disconnect(debugSignal);
+        }
+        saved_search_button.filter_popup = new SavedSearchPopover(saved_search_button);
+        saved_search_button.filter_popup.edit_clicked.connect(  debugSignal);
+        saved_search_button.filter_popup.delete_clicked.connect( debugSignal);
         saved_search_button.filter_popup.show_all();
     }
 
