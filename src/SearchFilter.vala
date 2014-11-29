@@ -1211,13 +1211,14 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         label_type.set_color(Config.Facade.get_instance().get_unselected_color());
         label_flagged.set_color(Config.Facade.get_instance().get_unselected_color());
         label_rating.set_color(Config.Facade.get_instance().get_unselected_color());
+        label_saved_search.set_color(Config.Facade.get_instance().get_unselected_color());
         
         toolbtn_photos.restyle();
         toolbtn_videos.restyle();
         toolbtn_raw.restyle();
         toolbtn_flag.restyle();
         rating_button.restyle();
-        
+        saved_search_button.restyle();
     }
     
     // Ticket #3260 part IV - display the context menu on secondary click
