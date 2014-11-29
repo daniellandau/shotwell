@@ -1017,6 +1017,7 @@ public class SearchFilterToolbar : Gtk.Toolbar {
             add.clicked.connect(on_add_click);
             list_box.insert(add, -1);
             list_box.row_activated.connect(on_activate_row);
+            list_box.selection_mode = Gtk.SelectionMode.NONE;
             popover.add(list_box);
         }
 
