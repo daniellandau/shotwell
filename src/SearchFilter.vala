@@ -1033,6 +1033,10 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         public void show_all() {
             popover.show_all();
         }
+
+        public void hide() {
+            popover.hide();
+        }
     }
     
     public Gtk.UIManager ui = new Gtk.UIManager();
@@ -1369,19 +1373,26 @@ public class SearchFilterToolbar : Gtk.Toolbar {
     }
     
     private void edit_dialog(SavedSearch search) {
+        saved_search_button.filter_popup.hide();
         SavedSearchDialog ssd = new SavedSearchDialog.edit_existing(search);
         ssd.show();
+    }
+
+    private void delete_dialog(SavedSearch search) {
+        saved_search_button.filter_popup.hide();
+        if (Dialogs.confirm_delete_saved_search(search))
+            AppWindow.get_command_manager().execute(new DeleteSavedSearchCommand(search));
     }
 
     private void on_saved_search_button_clicked() {
         info("saved search button clicked");
         if (saved_search_button.filter_popup != null) {
             saved_search_button.filter_popup.edit_clicked.disconnect(edit_dialog);
-            saved_search_button.filter_popup.delete_clicked.disconnect(edit_dialog);
+            saved_search_button.filter_popup.delete_clicked.disconnect(delete_dialog);
         }
         saved_search_button.filter_popup = new SavedSearchPopover(saved_search_button);
         saved_search_button.filter_popup.edit_clicked.connect(edit_dialog);
-        saved_search_button.filter_popup.delete_clicked.connect(edit_dialog);
+        saved_search_button.filter_popup.delete_clicked.connect(delete_dialog);
         saved_search_button.filter_popup.show_all();
     }
 
