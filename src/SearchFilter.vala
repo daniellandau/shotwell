@@ -996,7 +996,6 @@ public class SearchFilterToolbar : Gtk.Toolbar {
             list_box = new Gtk.ListBox();
             edit_buttons = new DataButton[0];
             delete_buttons = new DataButton[0];
-            info("constructing popover");
 
             foreach (SavedSearch search in SavedSearchTable.get_instance().get_all()) {
                 Gtk.HBox row = new Gtk.HBox(true, 1);
@@ -1013,7 +1012,9 @@ public class SearchFilterToolbar : Gtk.Toolbar {
                 delete_buttons += delete_button;
                 list_box.insert(row, -1);
             }
-            list_box.insert(new Gtk.Label("plus"), -1);
+            Gtk.Button add = new Gtk.Button.with_label("plus");
+            add.clicked.connect(on_add_click);
+            list_box.insert(add, -1);
             popover.add(list_box);
         }
 
@@ -1028,6 +1029,10 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         
         private void on_delete_click(SavedSearch search) {
             delete_clicked(search);
+        }
+
+        private void on_add_click() {
+            add_clicked();
         }
         
         public void show_all() {
@@ -1385,15 +1390,22 @@ public class SearchFilterToolbar : Gtk.Toolbar {
             AppWindow.get_command_manager().execute(new DeleteSavedSearchCommand(search));
     }
 
+    private void add_dialog() {
+        saved_search_button.filter_popup.hide();
+        (new SavedSearchDialog()).show();
+    }
+
     private void on_saved_search_button_clicked() {
-        info("saved search button clicked");
         if (saved_search_button.filter_popup != null) {
             saved_search_button.filter_popup.edit_clicked.disconnect(edit_dialog);
             saved_search_button.filter_popup.delete_clicked.disconnect(delete_dialog);
+            saved_search_button.filter_popup.add_clicked.disconnect(add_dialog);
         }
         saved_search_button.filter_popup = new SavedSearchPopover(saved_search_button);
         saved_search_button.filter_popup.edit_clicked.connect(edit_dialog);
         saved_search_button.filter_popup.delete_clicked.connect(delete_dialog);
+        saved_search_button.filter_popup.add_clicked.connect(add_dialog);
+        
         saved_search_button.filter_popup.show_all();
     }
 
