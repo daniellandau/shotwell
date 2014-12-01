@@ -976,8 +976,8 @@ public class SearchFilterToolbar : Gtk.Toolbar {
 
             public signal void clicked(SavedSearch search);
 
-            public DataButton(SavedSearch search, string label) {
-                button = new Gtk.Button.with_label(label);
+            public DataButton(SavedSearch search, string name) {
+                button = new Gtk.Button.from_icon_name(name, Gtk.IconSize.SMALL_TOOLBAR);
                 this.search = search;
                 this.add(button);
 
@@ -1003,18 +1003,18 @@ public class SearchFilterToolbar : Gtk.Toolbar {
                 Gtk.HBox row = new Gtk.HBox(true, 1);
                 row.pack_start(new Gtk.Label(search.get_name()));
                 
-                DataButton edit_button = new DataButton(search, "Edit");
+                DataButton edit_button = new DataButton(search, "text-editor-symbolic");
                 row.pack_start(edit_button);
                 edit_button.clicked.connect(on_edit_click);
                 edit_buttons += edit_button;
                 
-                DataButton delete_button = new DataButton(search, "Delete");
+                DataButton delete_button = new DataButton(search, "edit-delete-symbolic");
                 row.pack_start(delete_button);
                 delete_button.clicked.connect(on_delete_click);
                 delete_buttons += delete_button;
                 list_box.insert(row, -1);
             }
-            Gtk.Button add = new Gtk.Button.with_label("plus");
+            Gtk.Button add = new Gtk.Button.from_icon_name("list-add-symbolic", Gtk.IconSize.BUTTON);
             add.clicked.connect(on_add_click);
             list_box.insert(add, -1);
             list_box.row_activated.connect(on_activate_row);
