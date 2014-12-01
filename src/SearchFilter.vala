@@ -13,6 +13,7 @@ public enum SearchFilterCriteria {
     FLAG,
     MEDIA,
     RATING,
+    SAVEDSEARCH,
     ALL = 0xFFFFFFFF
 }
 
@@ -1360,6 +1361,9 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         toolbtn_photos.visible = ((criteria & SearchFilterCriteria.MEDIA) != 0); 
         toolbtn_videos.visible = ((criteria & SearchFilterCriteria.MEDIA) != 0);
         toolbtn_raw.visible = ((criteria & SearchFilterCriteria.MEDIA) != 0);
+
+        label_saved_search.visible = ((criteria & SearchFilterCriteria.SAVEDSEARCH) != 0);
+        saved_search_button.visible = ((criteria & SearchFilterCriteria.SAVEDSEARCH) != 0);
 
         // Ticket #3290, part IV - ensure that the separators
         // are shown and/or hidden as needed.
