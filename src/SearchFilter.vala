@@ -964,7 +964,8 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         private Gtk.ListBox list_box = null;
         private DataButton[] edit_buttons = null;
         private DataButton[] delete_buttons = null;
-        
+        Gtk.Button add = null;
+
         public signal void search_activated(SavedSearch search);
         public signal void edit_clicked(SavedSearch search);
         public signal void delete_clicked(SavedSearch search);
@@ -981,11 +982,19 @@ public class SearchFilterToolbar : Gtk.Toolbar {
                 this.search = search;
                 this.add(button);
 
+                restyle();
+                
                 button.clicked.connect(on_click);
             }
 
             ~DataButton() {
                 button.clicked.disconnect(on_click);
+            }
+
+            public void restyle() {
+                Resources.style_widget(button, Resources.SAVEDSEARCH_FILTER_BUTTON_STYLESHEET);
+                button.set_size_request(24, 24);
+                button.relief = Gtk.ReliefStyle.NONE;
             }
 
             private void on_click() {
@@ -1001,25 +1010,43 @@ public class SearchFilterToolbar : Gtk.Toolbar {
 
             foreach (SavedSearch search in SavedSearchTable.get_instance().get_all()) {
                 Gtk.HBox row = new Gtk.HBox(true, 1);
-                row.pack_start(new Gtk.Label(search.get_name()));
+                row.set_homogeneous(false);
+                Gtk.Label label = new Gtk.Label(search.get_name());
+                label.halign = Gtk.Align.START;
+                row.pack_start(label, true, true, 3);
+                
+                DataButton delete_button = new DataButton(search, "edit-delete-symbolic");
+                row.pack_end(delete_button, false, false);
+                delete_button.clicked.connect(on_delete_click);
+                delete_buttons += delete_button;
                 
                 DataButton edit_button = new DataButton(search, "text-editor-symbolic");
-                row.pack_start(edit_button);
+                row.pack_end(edit_button, false, false);
                 edit_button.clicked.connect(on_edit_click);
                 edit_buttons += edit_button;
                 
-                DataButton delete_button = new DataButton(search, "edit-delete-symbolic");
-                row.pack_start(delete_button);
-                delete_button.clicked.connect(on_delete_click);
-                delete_buttons += delete_button;
                 list_box.insert(row, -1);
             }
-            Gtk.Button add = new Gtk.Button.from_icon_name("list-add-symbolic", Gtk.IconSize.BUTTON);
+            add = new Gtk.Button.from_icon_name("list-add-symbolic", Gtk.IconSize.BUTTON);
             add.clicked.connect(on_add_click);
             list_box.insert(add, -1);
             list_box.row_activated.connect(on_activate_row);
             list_box.selection_mode = Gtk.SelectionMode.NONE;
             popover.add(list_box);
+
+            restyle();
+        }
+
+        ~SavedSearchPopover() {
+            add.clicked.disconnect(on_add_click);
+            list_box.row_activated.disconnect(on_activate_row);
+        }
+
+        public void restyle() {
+            Resources.style_widget(add, Resources.SAVEDSEARCH_FILTER_BUTTON_STYLESHEET);
+            add.relief = Gtk.ReliefStyle.NONE;
+            foreach (DataButton button in edit_buttons) button.restyle();
+            foreach (DataButton button in delete_buttons) button.restyle();
         }
 
         private bool is_search_row(Gtk.ListBoxRow? row) {
