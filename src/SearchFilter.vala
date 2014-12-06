@@ -55,6 +55,9 @@ public abstract class SearchViewFilter : ViewFilter {
     // Search text filter.  Should only be set to lower-case.
     private string? search_filter = null;
     private string[]? search_filter_words = null;
+
+    // Saved search filter
+    public SavedSearch saved_search { get; set; default = null; }
     
     // Returns a bitmask of SearchFilterCriteria.
     // IMPORTANT: There is no signal on this, changing this value after the
@@ -154,6 +157,10 @@ public abstract class SearchViewFilter : ViewFilter {
         search_filter_words = null;
     }
     
+    public bool has_saved_search() {
+        return saved_search != null;
+    }
+
     public bool get_rating_allow_higher() {
         return rating_allow_higher;
     }
@@ -208,6 +215,7 @@ public abstract class DefaultSearchViewFilter : SearchViewFilter {
             }
         }
         
+        // Text
         if (((SearchFilterCriteria.TEXT & criteria) != 0) && has_search_filter()) {
             unowned string? media_keywords = source.get_indexable_keywords();
             
@@ -247,6 +255,11 @@ public abstract class DefaultSearchViewFilter : SearchViewFilter {
             }
         }
         
+        // Saved search
+        if (((SearchFilterCriteria.SAVEDSEARCH & criteria) != 0) && has_saved_search()) {
+            return false;
+        }
+
         return true;
     }
 }
@@ -1037,11 +1050,6 @@ public class SearchFilterToolbar : Gtk.Toolbar {
             restyle();
         }
 
-        ~SavedSearchPopover() {
-            add.clicked.disconnect(on_add_click);
-            list_box.row_activated.disconnect(on_activate_row);
-        }
-
         public void restyle() {
             Resources.style_widget(add, Resources.SAVEDSEARCH_FILTER_BUTTON_STYLESHEET);
             add.relief = Gtk.ReliefStyle.NONE;
@@ -1068,6 +1076,8 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         ~SavedSearchPopover() {
             foreach (DataButton button in edit_buttons) button.clicked.disconnect(on_edit_click);
             foreach (DataButton button in delete_buttons) button.clicked.disconnect(on_delete_click);
+            add.clicked.disconnect(on_add_click);
+            list_box.row_activated.disconnect(on_activate_row);
         }
 
         private void on_edit_click(SavedSearch search) {
