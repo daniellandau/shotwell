@@ -257,7 +257,7 @@ public abstract class DefaultSearchViewFilter : SearchViewFilter {
         
         // Saved search
         if (((SearchFilterCriteria.SAVEDSEARCH & criteria) != 0) && has_saved_search()) {
-            return false;
+            return saved_search.predicate(source);
         }
 
         return true;
