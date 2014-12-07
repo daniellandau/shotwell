@@ -937,12 +937,12 @@ public class SearchFilterToolbar : Gtk.Toolbar {
 
     protected class SavedSearchFilterButton : Gtk.ToolItem {
         public SavedSearchPopover filter_popup = null;
-        public Gtk.Button button;
+        public Gtk.ToggleButton button;
         
         public signal void clicked();
         
         public SavedSearchFilterButton() {
-            button = new Gtk.Button();
+            button = new Gtk.ToggleButton();
             button.set_image(new Gtk.Image.from_icon_name(Gtk.Stock.FIND, Gtk.IconSize.SMALL_TOOLBAR));
             button.set_can_focus(false);
             
@@ -961,6 +961,10 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         
         private void on_clicked() {
             clicked();
+        }
+
+        public void set_active(bool active) {
+            button.set_active(active);
         }
         
         public void restyle() {
@@ -1071,6 +1075,7 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         private void on_activate_row(Gtk.ListBoxRow? row) {
             if (is_search_row(row))
                 search_activated(get_search(row));
+            popover.hide();
         }
 
         ~SavedSearchPopover() {
@@ -1104,6 +1109,7 @@ public class SearchFilterToolbar : Gtk.Toolbar {
     public Gtk.UIManager ui = new Gtk.UIManager();
     
     private SearchFilterActions actions;
+    private SavedSearch saved_search = null;
     private SearchBox search_box;
     private RatingFilterButton rating_button = new RatingFilterButton();
     private SavedSearchFilterButton saved_search_button = new SavedSearchFilterButton();
@@ -1339,6 +1345,17 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         update();
     }
 
+    private void on_savedsearch_selected(SavedSearch saved_search) {
+        saved_search_button.set_active(true);
+        this.saved_search = saved_search;
+        update();
+    }
+
+    private void disable_savedsearch() {
+        this.saved_search = null;
+        update();
+    }
+
     // Ticket #3290, part II - listen for criteria change signals,
     // and show or hide widgets based on the criteria we just 
     // changed to.
@@ -1381,6 +1398,8 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         RatingFilter filter = (RatingFilter) actions.rating.current_value;
         search_filter.set_rating_filter(filter);
         rating_button.set_filter_icon(filter);
+
+        search_filter.saved_search = saved_search;
         
         // Ticket #3290, part III - check the current criteria
         // and show or hide widgets as needed.
@@ -1456,19 +1475,25 @@ public class SearchFilterToolbar : Gtk.Toolbar {
     }
 
     private void on_saved_search_button_clicked() {
-        if (saved_search_button.filter_popup != null) {
-            saved_search_button.filter_popup.edit_clicked.disconnect(edit_dialog);
-            saved_search_button.filter_popup.search_activated.disconnect(edit_dialog);
-            saved_search_button.filter_popup.delete_clicked.disconnect(delete_dialog);
-            saved_search_button.filter_popup.add_clicked.disconnect(add_dialog);
+        if (saved_search != null) {
+            saved_search = null;
+            saved_search_button.set_active(false);
+            disable_savedsearch();
+        } else {
+            if (saved_search_button.filter_popup != null) {
+                saved_search_button.filter_popup.edit_clicked.disconnect(edit_dialog);
+                saved_search_button.filter_popup.search_activated.disconnect(on_savedsearch_selected);
+                saved_search_button.filter_popup.delete_clicked.disconnect(delete_dialog);
+                saved_search_button.filter_popup.add_clicked.disconnect(add_dialog);
+            }
+            saved_search_button.filter_popup = new SavedSearchPopover(saved_search_button);
+            saved_search_button.filter_popup.edit_clicked.connect(edit_dialog);
+            saved_search_button.filter_popup.search_activated.connect(on_savedsearch_selected);
+            saved_search_button.filter_popup.delete_clicked.connect(delete_dialog);
+            saved_search_button.filter_popup.add_clicked.connect(add_dialog);
+
+            saved_search_button.filter_popup.show_all();
         }
-        saved_search_button.filter_popup = new SavedSearchPopover(saved_search_button);
-        saved_search_button.filter_popup.edit_clicked.connect(edit_dialog);
-        saved_search_button.filter_popup.search_activated.connect(edit_dialog);
-        saved_search_button.filter_popup.delete_clicked.connect(delete_dialog);
-        saved_search_button.filter_popup.add_clicked.connect(add_dialog);
-        
-        saved_search_button.filter_popup.show_all();
     }
 
     public void take_focus() {
