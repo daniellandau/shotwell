@@ -1,4 +1,4 @@
-/* Copyright 2009-2014 Yorba Foundation
+/* Copyright 2009-2015 Yorba Foundation
  *
  * This software is licensed under the GNU LGPL (version 2.1 or later).
  * See the COPYING file in this distribution.
@@ -142,7 +142,7 @@ public abstract class CollectionPage : MediaPage {
     protected override Gtk.ActionEntry[] init_collect_action_entries() {
         Gtk.ActionEntry[] actions = base.init_collect_action_entries();
 
-        Gtk.ActionEntry print = { "Print", Gtk.Stock.PRINT, TRANSLATABLE, "<Ctrl>P",
+        Gtk.ActionEntry print = { "Print", Resources.PRINT_LABEL, TRANSLATABLE, "<Ctrl>P",
             TRANSLATABLE, on_print };
         print.label = Resources.PRINT_MENU;
         actions += print;
@@ -193,7 +193,7 @@ public abstract class CollectionPage : MediaPage {
         paste_adjustments.tooltip = Resources.PASTE_ADJUSTMENTS_TOOLTIP;
         actions += paste_adjustments;
 
-        Gtk.ActionEntry revert = { "Revert", Gtk.Stock.REVERT_TO_SAVED, TRANSLATABLE, null,
+        Gtk.ActionEntry revert = { "Revert", null, TRANSLATABLE, null,
             TRANSLATABLE, on_revert };
         revert.label = Resources.REVERT_MENU;
         actions += revert;
@@ -215,7 +215,7 @@ public abstract class CollectionPage : MediaPage {
         adjust_date_time.label = Resources.ADJUST_DATE_TIME_MENU;
         actions += adjust_date_time;
         
-        Gtk.ActionEntry external_edit = { "ExternalEdit", Gtk.Stock.EDIT, TRANSLATABLE, "<Ctrl>Return",
+        Gtk.ActionEntry external_edit = { "ExternalEdit", Resources.EDIT_LABEL, TRANSLATABLE, "<Ctrl>Return",
             TRANSLATABLE, on_external_edit };
         external_edit.label = Resources.EXTERNAL_EDIT_MENU;
         actions += external_edit;

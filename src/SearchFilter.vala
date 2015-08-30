@@ -1,4 +1,4 @@
-/* Copyright 2011-2014 Yorba Foundation
+/* Copyright 2011-2015 Yorba Foundation
  *
  * This software is licensed under the GNU LGPL (version 2.1 or later).
  * See the COPYING file in this distribution.
@@ -660,7 +660,8 @@ public class SearchFilterActions {
     }
 }
 
-public class SearchFilterToolbar : Gtk.Toolbar {
+public class SearchFilterToolbar : Gtk.Revealer {
+    private Gtk.Toolbar toolbar;
     private const int FILTER_BUTTON_MARGIN = 12; // the distance between icon and edge of button
     private const float FILTER_ICON_STAR_SCALE = 0.65f; // changes the size of the filter icon
     private const float FILTER_ICON_SCALE = 0.75f; // changes the size of the all photos icon
@@ -685,10 +686,6 @@ public class SearchFilterToolbar : Gtk.Toolbar {
                 add(label);
             }
         }
-        
-        public void set_color(Gdk.RGBA color) {
-            label.override_color(Gtk.StateFlags.NORMAL, color);
-        }
     }
     
     private class ToggleActionToolButton : Gtk.ToolItem {
@@ -702,8 +699,8 @@ public class SearchFilterToolbar : Gtk.Toolbar {
             button.set_active(action.active);
             button.clicked.connect(on_button_activate);
             button.set_has_tooltip(true);
-
-            restyle();
+            button.set_relief(Gtk.ReliefStyle.NONE);
+            button.set_margin_start(2);
             
             this.add(button);
         }
@@ -725,21 +722,13 @@ public class SearchFilterToolbar : Gtk.Toolbar {
 
             button.set_image(image);
         }
-        
-        public void restyle() {
-            string bgcolorname =
-                Resources.to_css_color(Config.Facade.get_instance().get_bg_color());
-            string stylesheet = Resources.SEARCH_BUTTON_STYLESHEET_TEMPLATE.printf(bgcolorname);
-            
-            Resources.style_widget(button, stylesheet);
-        }
     }
     
     // Ticket #3260 - Add a 'close' context menu to
     // the searchbar.
     // The close menu. Populated below in the constructor.
     private Gtk.Menu close_menu = new Gtk.Menu();
-    private Gtk.ImageMenuItem close_item = new Gtk.ImageMenuItem.from_stock(Gtk.Stock.CLOSE, null);
+    private Gtk.MenuItem close_item = new Gtk.MenuItem();
 
     // Text search box.
     protected class SearchBox : Gtk.ToolItem {
@@ -826,10 +815,10 @@ public class SearchFilterToolbar : Gtk.Toolbar {
             button = new Gtk.Button();
             button.set_image(get_filter_icon(RatingFilter.UNRATED_OR_HIGHER));
             button.set_can_focus(false);
+            button.set_relief(Gtk.ReliefStyle.NONE);
+            button.set_margin_start(2);
 
             button.clicked.connect(on_clicked);
-
-            restyle();
             
             set_homogeneous(false);
             
@@ -924,14 +913,6 @@ public class SearchFilterToolbar : Gtk.Toolbar {
 
         private int get_filter_button_size(RatingFilter filter) {
             return get_filter_icon_size(filter) + 2 * FILTER_BUTTON_MARGIN;
-        }
-
-        public void restyle() {
-            string bgcolorname =
-                Resources.to_css_color(Config.Facade.get_instance().get_bg_color());
-            string stylesheet = Resources.SEARCH_BUTTON_STYLESHEET_TEMPLATE.printf(bgcolorname);
-            
-            Resources.style_widget(button, stylesheet);
         }
     }
 
@@ -1135,11 +1116,12 @@ public class SearchFilterToolbar : Gtk.Toolbar {
     
     public SearchFilterToolbar(SearchFilterActions actions) {
         this.actions = actions;
+        toolbar = new Gtk.Toolbar();
         actions.media_context_changed.connect(on_media_context_changed);
         search_box = new SearchBox(actions.text);
         
-        set_name("search-filter-toolbar");
-        set_icon_size(Gtk.IconSize.SMALL_TOOLBAR);
+        toolbar.set_name("search-filter-toolbar");
+        toolbar.set_icon_size(Gtk.IconSize.SMALL_TOOLBAR);
         
         File ui_file = Resources.get_ui("search_bar.ui");
         try {
@@ -1156,14 +1138,14 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         // Prepare the close menu for use, but don't
         // display it yet; we'll connect it to secondary
         // click later on.
-        ((Gtk.MenuItem) close_item).show();
-        close_item.always_show_image = true;
+        close_item.set_label(_("Close"));
+        close_item.show();
         close_item.activate.connect(on_context_menu_close_chosen);
         close_menu.append(close_item);
        
         // Type label and toggles
         label_type = new LabelToolItem(_("Type"), 10, 5);
-        insert(label_type, -1);
+        toolbar.insert(label_type, -1);
         
         toolbtn_photos = new ToggleActionToolButton(actions.photos);
         toolbtn_photos.set_tooltip_text(actions.get_action_group().get_action("CommonDisplayPhotos").tooltip);
@@ -1174,34 +1156,34 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         toolbtn_raw = new ToggleActionToolButton(actions.raw);
         toolbtn_raw.set_tooltip_text(actions.get_action_group().get_action("CommonDisplayRaw").tooltip);
         
-        insert(toolbtn_photos, -1);
-        insert(toolbtn_videos, -1);
-        insert(toolbtn_raw, -1);
+        toolbar.insert(toolbtn_photos, -1);
+        toolbar.insert(toolbtn_videos, -1);
+        toolbar.insert(toolbtn_raw, -1);
         
         // separator
         sepr_mediatype_flagged = new Gtk.SeparatorToolItem();
-        insert(sepr_mediatype_flagged, -1);
+        toolbar.insert(sepr_mediatype_flagged, -1);
         
         // Flagged label and toggle
         label_flagged = new LabelToolItem(_("Flagged"));
-        insert(label_flagged, -1);
+        toolbar.insert(label_flagged, -1);
         
         toolbtn_flag = new ToggleActionToolButton(actions.flagged);
         toolbtn_flag.set_tooltip_text(actions.get_action_group().get_action("CommonDisplayFlagged").tooltip);
         
-        insert(toolbtn_flag, -1);
+        toolbar.insert(toolbtn_flag, -1);
         
         // separator
         sepr_flagged_rating = new Gtk.SeparatorToolItem();
-        insert(sepr_flagged_rating, -1);
+        toolbar.insert(sepr_flagged_rating, -1);
         
         // Rating label and button
         label_rating = new LabelToolItem(_("Rating"));
-        insert(label_rating, -1);
+        toolbar.insert(label_rating, -1);
         rating_button.filter_popup = (Gtk.Menu) ui.get_widget("/FilterPopupMenu");
         rating_button.set_expand(false);
         rating_button.clicked.connect(on_filter_button_clicked);
-        insert(rating_button, -1);
+        toolbar.insert(rating_button, -1);
         
         // Saved search label and button
         label_saved_search = new LabelToolItem(_("Saved Search"));
@@ -1214,14 +1196,12 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         Gtk.SeparatorToolItem separator_align = new Gtk.SeparatorToolItem();
         separator_align.set_expand(true);
         separator_align.set_draw(false);
-        insert(separator_align, -1);
+        toolbar.insert(separator_align, -1);
         
         // Search box.
-        insert(search_box, -1);
-        
-        // Set background color of toolbar and update them when the configuration is updated
-        Config.Facade.get_instance().bg_color_name_changed.connect(on_bg_color_name_changed);
-        on_bg_color_name_changed();
+        toolbar.insert(search_box, -1);
+
+        add(toolbar);
         
         // hook up signals to actions to be notified when they change
         actions.flagged_toggled.connect(on_flagged_toggled);
@@ -1233,14 +1213,13 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         actions.criteria_changed.connect(on_criteria_changed);
         
         // #3260 part II Hook up close menu.
-        popup_context_menu.connect(on_context_menu_requested);
+        toolbar.popup_context_menu.connect(on_context_menu_requested);
         
         on_media_context_changed(actions.get_has_photos(), actions.get_has_videos(),
             actions.get_has_raw(), actions.get_has_flagged());
     }
     
     ~SearchFilterToolbar() {
-        Config.Facade.get_instance().bg_color_name_changed.disconnect(on_bg_color_name_changed);
         
         actions.media_context_changed.disconnect(on_media_context_changed);
 
@@ -1252,7 +1231,7 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         actions.text_changed.disconnect(on_search_text_changed);
         actions.criteria_changed.disconnect(on_criteria_changed);
         
-        popup_context_menu.disconnect(on_context_menu_requested); 
+        toolbar.popup_context_menu.disconnect(on_context_menu_requested); 
     }
     
     private void on_media_context_changed(bool has_photos, bool has_videos, bool has_raw,
@@ -1276,25 +1255,6 @@ public class SearchFilterToolbar : Gtk.Toolbar {
             toolbtn_flag.set_icon_name(Resources.ICON_FILTER_FLAGGED);
         else
             toolbtn_flag.set_icon_name(Resources.ICON_FILTER_FLAGGED_DISABLED);
-    }
-    
-    private void on_bg_color_name_changed() {
-        string bgcolorname =
-            Resources.to_css_color(Config.Facade.get_instance().get_bg_color());
-        string toolbar_stylesheet = Resources.TOOLBAR_STYLESHEET_TEMPLATE.printf(bgcolorname);
-        Resources.style_widget(this, toolbar_stylesheet);
-        
-        label_type.set_color(Config.Facade.get_instance().get_unselected_color());
-        label_flagged.set_color(Config.Facade.get_instance().get_unselected_color());
-        label_rating.set_color(Config.Facade.get_instance().get_unselected_color());
-        label_saved_search.set_color(Config.Facade.get_instance().get_unselected_color());
-        
-        toolbtn_photos.restyle();
-        toolbtn_videos.restyle();
-        toolbtn_raw.restyle();
-        toolbtn_flag.restyle();
-        rating_button.restyle();
-        saved_search_button.restyle();
     }
     
     // Ticket #3260 part IV - display the context menu on secondary click

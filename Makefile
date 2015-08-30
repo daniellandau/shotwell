@@ -2,7 +2,7 @@ PROGRAM = shotwell
 PROGRAM_THUMBNAILER = shotwell-video-thumbnailer
 PROGRAM_MIGRATOR = shotwell-settings-migrator
 
-VERSION = 0.20.2
+VERSION = 0.22.0
 GITVER := $(shell git log -n 1 2>/dev/null | head -n 1 | awk '{print $$2}')
 GETTEXT_PACKAGE = $(PROGRAM)
 BUILD_ROOT = 1
@@ -61,6 +61,7 @@ UNUNITIZED_SRC_FILES = \
 	main.vala \
 	AppWindow.vala \
 	CollectionPage.vala \
+	NaturalCollate.vala \
 	Thumbnail.vala \
 	ThumbnailCache.vala \
 	CheckerboardLayout.vala \
@@ -187,7 +188,6 @@ ICON_FILES = \
 	crop-pivot-reticle.png \
 	crop.svg \
 	drag_nub.png \
-	enhance.png \
 	five-star-filter.svg \
 	five-stars.svg \
 	flag-page.png \
@@ -216,6 +216,7 @@ ICON_FILES = \
 	shotwell.ico \
 	shotwell-street.jpg \
 	shotwell.svg \
+	shotwell-auto-enhance.png \
 	sprocket.png \
 	straighten.svg \
 	three-star-filter-plus.svg \
@@ -293,7 +294,7 @@ EXT_PKG_VERSIONS = \
 	gstreamer-base-1.0 >= 1.0.0 \
 	gstreamer-plugins-base-1.0 >= 1.0.0 \
 	gstreamer-pbutils-1.0 >= 1.0.0 \
-	gtk+-3.0 >= 3.6.0 \
+	gtk+-3.0 >= 3.12.2 \
 	gudev-1.0 >= 145 \
 	libexif >= 0.6.16 \
 	libgphoto2 >= 2.4.2 \
@@ -492,9 +493,8 @@ endif
 misc/shotwell-viewer.desktop: misc/shotwell-viewer.desktop.head $(EXPANDED_CORE_PO_FILES)
 	cp misc/shotwell-viewer.desktop.head misc/shotwell-viewer.desktop
 	$(foreach lang,$(CORE_SUPPORTED_LANGUAGES), echo X-GNOME-FullName[$(lang)]=`TEXTDOMAINDIR=locale-langpack \
-		LANGUAGE=$(lang) gettext --domain=shotwell $(DESKTOP_APP_FULL_NAME)` \
-		echo X-GNOME-FullName[$(lang)]=`TEXTDOMAINDIR=locale-langpack LANGUAGE=$(lang) gettext \
-		--domain=shotwell $(DIRECT_EDIT_DESKTOP_APP_FULL_NAME)` >> misc/shotwell-viewer.desktop ; \
+		LANGUAGE=$(lang) gettext --domain=shotwell $(DIRECT_EDIT_DESKTOP_APP_FULL_NAME)` \
+		>> misc/shotwell-viewer.desktop ; \
 		echo GenericName[$(lang)]=`TEXTDOMAINDIR=locale-langpack LANGUAGE=$(lang) gettext \
 		--domain=shotwell $(DIRECT_EDIT_DESKTOP_APPLICATION_CLASS)` >> misc/shotwell-viewer.desktop ;)
 ifndef DISABLE_DESKTOP_VALIDATE

@@ -1,4 +1,4 @@
-/* Copyright 2010-2014 Yorba Foundation
+/* Copyright 2010-2015 Yorba Foundation
  *
  * This software is licensed under the GNU LGPL (version 2.1 or later).
  * See the COPYING file in this distribution.
@@ -197,8 +197,11 @@ public class VideoReader {
             // (and the corresponding output struct) in order to implement #2836.
             Date? video_date = null;
             if (info.get_tags() != null && info.get_tags().get_date(Gst.Tags.DATE, out video_date)) {
-                timestamp = new DateTime.local(video_date.get_year(), video_date.get_month(), 
-                    video_date.get_day(), 0, 0, 0);
+                // possible for get_date() to return true and a null Date
+                if (video_date != null) {
+                    timestamp = new DateTime.local(video_date.get_year(), video_date.get_month(),
+                        video_date.get_day(), 0, 0, 0);
+                }
             }
         } catch (Error e) {
             debug("Video read error: %s", e.message);

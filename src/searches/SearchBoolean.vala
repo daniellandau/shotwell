@@ -1,4 +1,4 @@
-/* Copyright 2011-2014 Yorba Foundation
+/* Copyright 2011-2015 Yorba Foundation
  *
  * This software is licensed under the GNU LGPL (version 2.1 or later).
  * See the COPYING file in this distribution.
@@ -206,7 +206,8 @@ public class SearchConditionText : SearchCondition {
         STARTS_WITH,
         ENDS_WITH,
         DOES_NOT_CONTAIN,
-        IS_NOT_SET;
+        IS_NOT_SET,
+        IS_SET;
         
         public string to_string() {
             switch (this) {
@@ -227,6 +228,9 @@ public class SearchConditionText : SearchCondition {
                 
                 case Context.IS_NOT_SET:
                     return "IS_NOT_SET";
+                
+                case Context.IS_SET:
+                    return "IS_SET";
                 
                 default:
                     error("unrecognized text search context enumeration value");
@@ -251,6 +255,9 @@ public class SearchConditionText : SearchCondition {
             
             else if (str == "IS_NOT_SET")
                 return Context.IS_NOT_SET;
+            
+            else if (str == "IS_SET")
+                return Context.IS_SET;
             
             else
                 error("unrecognized text search context name: %s", str);
@@ -287,6 +294,9 @@ public class SearchConditionText : SearchCondition {
 
             case Context.IS_NOT_SET:
                 return (is_string_empty(haystack));
+            
+            case Context.IS_SET:
+                return (!is_string_empty(haystack));
         }
         
         return false;
@@ -298,10 +308,9 @@ public class SearchConditionText : SearchCondition {
         
         // title
         if (SearchType.ANY_TEXT == search_type || SearchType.TITLE == search_type) {
-            string title = source.get_title();
-            if(title != null){
-                ret |= string_match(text, String.remove_diacritics(title.down()));
-            }
+            string? title = (null != source.get_title()) ?
+                String.remove_diacritics(source.get_title().down()) : null;
+            ret |= string_match(text, title);
         }
         
         // tags
