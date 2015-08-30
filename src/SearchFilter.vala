@@ -988,6 +988,8 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         public signal void delete_clicked(SavedSearch search);
         public signal void add_clicked();
 
+        public signal void closed();
+
         private class DataButton : Gtk.Bin {
             private Gtk.Button button = null;
             public SavedSearch search { get; private set; }
@@ -1021,6 +1023,7 @@ public class SearchFilterToolbar : Gtk.Toolbar {
         
         public SavedSearchPopover(Gtk.Widget relative_to) {
             popover = new Gtk.Popover(relative_to);
+            popover.closed.connect(on_popover_closed);
             list_box = new Gtk.ListBox();
             edit_buttons = new DataButton[0];
             delete_buttons = new DataButton[0];
@@ -1054,6 +1057,14 @@ public class SearchFilterToolbar : Gtk.Toolbar {
             restyle();
         }
 
+        ~SavedSearchPopover() {
+            foreach (DataButton button in edit_buttons) button.clicked.disconnect(on_edit_click);
+            foreach (DataButton button in delete_buttons) button.clicked.disconnect(on_delete_click);
+            add.clicked.disconnect(on_add_click);
+            list_box.row_activated.disconnect(on_activate_row);
+            popover.closed.disconnect(on_popover_closed);
+        }
+
         public void restyle() {
             Resources.style_widget(add, Resources.SAVEDSEARCH_FILTER_BUTTON_STYLESHEET);
             add.relief = Gtk.ReliefStyle.NONE;
@@ -1078,13 +1089,6 @@ public class SearchFilterToolbar : Gtk.Toolbar {
             popover.hide();
         }
 
-        ~SavedSearchPopover() {
-            foreach (DataButton button in edit_buttons) button.clicked.disconnect(on_edit_click);
-            foreach (DataButton button in delete_buttons) button.clicked.disconnect(on_delete_click);
-            add.clicked.disconnect(on_add_click);
-            list_box.row_activated.disconnect(on_activate_row);
-        }
-
         private void on_edit_click(SavedSearch search) {
             edit_clicked(search);
         }
@@ -1095,6 +1099,10 @@ public class SearchFilterToolbar : Gtk.Toolbar {
 
         private void on_add_click() {
             add_clicked();
+        }
+
+        private void on_popover_closed() {
+            closed();
         }
         
         public void show_all() {
@@ -1459,12 +1467,14 @@ public class SearchFilterToolbar : Gtk.Toolbar {
     
     private void edit_dialog(SavedSearch search) {
         saved_search_button.filter_popup.hide();
+        saved_search_button.set_active(false);
         SavedSearchDialog ssd = new SavedSearchDialog.edit_existing(search);
         ssd.show();
     }
 
     private void delete_dialog(SavedSearch search) {
         saved_search_button.filter_popup.hide();
+        saved_search_button.set_active(false);
         if (Dialogs.confirm_delete_saved_search(search))
             AppWindow.get_command_manager().execute(new DeleteSavedSearchCommand(search));
     }
