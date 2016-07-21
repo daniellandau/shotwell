@@ -940,7 +940,11 @@ public class SearchFilterToolbar : Gtk.Revealer {
         
         public SavedSearchFilterButton() {
             button = new Gtk.ToggleButton();
-            button.set_image(new Gtk.Image.from_icon_name(Gtk.Stock.FIND, Gtk.IconSize.SMALL_TOOLBAR));
+            button.set_always_show_image(true);
+
+            Gtk.Image? image = new Gtk.Image.from_icon_name(Gtk.Stock.FIND, Gtk.IconSize.SMALL_TOOLBAR);
+            image.set_margin_end(6);
+            button.set_image(image);
             button.set_can_focus(false);
             
             button.clicked.connect(on_clicked);
@@ -962,6 +966,10 @@ public class SearchFilterToolbar : Gtk.Revealer {
 
         public void set_active(bool active) {
             button.set_active(active);
+        }
+
+        public void set_label(string label) {
+            button.set_label(label);
         }
         
         public void restyle() {
@@ -1118,13 +1126,13 @@ public class SearchFilterToolbar : Gtk.Revealer {
     private SavedSearchFilterButton saved_search_button = new SavedSearchFilterButton();
     private SearchViewFilter? search_filter = null;
     private LabelToolItem label_type;
-    private LabelToolItem label_saved_search;
     private ToggleActionToolButton toolbtn_photos;
     private ToggleActionToolButton toolbtn_videos;
     private ToggleActionToolButton toolbtn_raw;
     private ToggleActionToolButton toolbtn_flag;
     private Gtk.SeparatorToolItem sepr_mediatype_flagged;
     private Gtk.SeparatorToolItem sepr_flagged_rating;
+    private Gtk.SeparatorToolItem sepr_rating_saved;
     
     public SearchFilterToolbar(SearchFilterActions actions) {
         this.actions = actions;
@@ -1195,10 +1203,13 @@ public class SearchFilterToolbar : Gtk.Revealer {
         rating_button.clicked.connect(on_filter_button_clicked);
         toolbar.insert(rating_button, -1);
         
-        // Saved search label and button
-        label_saved_search = new LabelToolItem(_("Saved Search"));
-        toolbar.insert(label_saved_search, -1);
+        // separator
+        sepr_rating_saved = new Gtk.SeparatorToolItem();
+        toolbar.insert(sepr_rating_saved, -1);
+        
+        // Saved search button
         saved_search_button.set_expand(false);
+		saved_search_button.set_label(_("Saved Search"));
         saved_search_button.clicked.connect(on_saved_search_button_clicked);
         toolbar.insert(saved_search_button, -1);
         
@@ -1394,7 +1405,6 @@ public class SearchFilterToolbar : Gtk.Revealer {
         toolbtn_videos.visible = ((criteria & SearchFilterCriteria.MEDIA) != 0);
         toolbtn_raw.visible = ((criteria & SearchFilterCriteria.MEDIA) != 0);
 
-        label_saved_search.visible = ((criteria & SearchFilterCriteria.SAVEDSEARCH) != 0);
         saved_search_button.visible = ((criteria & SearchFilterCriteria.SAVEDSEARCH) != 0);
 
         // Ticket #3290, part IV - ensure that the separators
