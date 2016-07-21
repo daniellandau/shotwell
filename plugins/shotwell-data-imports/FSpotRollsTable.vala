@@ -1,4 +1,4 @@
-/* Copyright 2011-2015 Yorba Foundation
+/* Copyright 2016 Software Freedom Conservancy Inc.
  *
  * This software is licensed under the GNU Lesser General Public License
  * (version 2.1 or later).  See the COPYING file in this distribution.
@@ -18,8 +18,8 @@ public class FSpotRollRow : Object {
  * This class represents the F-Spot rolls table.
  */
 public class FSpotRollsTable : FSpotDatabaseTable<FSpotRollRow> {
-    public static const string TABLE_NAME = "Rolls";
-    public static const string TABLE_NAME_PRE_V5 = "Imports";
+    public const string TABLE_NAME = "Rolls";
+    public const string TABLE_NAME_PRE_V5 = "Imports";
     
     public FSpotRollsTable(Sqlite.Database db, FSpotDatabaseBehavior db_behavior) {
         base(db);

@@ -1,4 +1,4 @@
-/* Copyright 2011-2015 Yorba Foundation
+/* Copyright 2016 Software Freedom Conservancy Inc.
  *
  * This software is licensed under the GNU Lesser General Public License
  * (version 2.1 or later).  See the COPYING file in this distribution.
@@ -81,7 +81,7 @@ public class FSpotMetaTable : FSpotDatabaseTable<FSpotMetaRow> {
 }
 
 public class FSpotMetaBehavior : FSpotTableBehavior<FSpotMetaRow>, Object {
-    public static const string TABLE_NAME = "Meta";
+    public const string TABLE_NAME = "Meta";
     
     private static FSpotMetaBehavior instance;
     

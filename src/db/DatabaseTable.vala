@@ -1,4 +1,4 @@
-/* Copyright 2009-2015 Yorba Foundation
+/* Copyright 2016 Software Freedom Conservancy Inc.
  *
  * This software is licensed under the GNU LGPL (version 2.1 or later).
  * See the COPYING file in this distribution.
@@ -49,6 +49,13 @@ public abstract class DatabaseTable {
                     e.message));
             }
         }
+#if SQLITE_DEBUG
+        db.trace (on_trace);
+#endif
+    }
+
+    public static void on_trace (string message) {
+        debug ("SQLITE: %s", message);
     }
 
     public static void init(string filename) {
@@ -69,10 +76,17 @@ public abstract class DatabaseTable {
             db = null;
             
             string backup_path = filename + ".bak";
-            string cmdline = "cp " + backup_path + " " + filename;
-            Posix.system(cmdline);    
 
-            prepare_db(filename);
+            try {
+                File src = File.new_for_commandline_arg(backup_path);
+                File dest = File.new_for_commandline_arg(filename);
+                src.copy(dest,
+                         FileCopyFlags.OVERWRITE |
+                         FileCopyFlags.ALL_METADATA);
+                prepare_db(filename);
+            } catch (Error error) {
+                AppWindow.panic(_("Unable to restore photo database %s").printf(error.message));
+            }
         }
 
         // disable synchronized commits for performance reasons ... this is not vital, hence we

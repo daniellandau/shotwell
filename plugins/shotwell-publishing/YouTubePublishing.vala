@@ -1,4 +1,4 @@
-/* Copyright 2009-2015 Yorba Foundation
+/* Copyright 2016 Software Freedom Conservancy Inc.
  *
  * This software is licensed under the GNU LGPL (version 2.1 or later).
  * See the COPYING file in this distribution.
@@ -11,7 +11,8 @@ public class YouTubeService : Object, Spit.Pluggable, Spit.Publishing.Service {
 
     public YouTubeService(GLib.File resource_directory) {
         if (icon_pixbuf_set == null)
-            icon_pixbuf_set = Resources.load_icon_set(resource_directory.get_child(ICON_FILENAME));
+            icon_pixbuf_set = Resources.load_from_resource
+                (Resources.RESOURCE_PATH + "/" + ICON_FILENAME);
     }
 
     public int get_pluggable_interface(int min_host_interface, int max_host_interface) {
@@ -29,7 +30,7 @@ public class YouTubeService : Object, Spit.Pluggable, Spit.Publishing.Service {
 
     public void get_info(ref Spit.PluggableInfo info) {
         info.authors = "Jani Monoses, Lucas Beeler";
-        info.copyright = _("Copyright 2009-2015 Yorba Foundation");
+        info.copyright = _("Copyright 2016 Software Freedom Conservancy Inc.");
         info.translators = Resources.TRANSLATORS;
         info.version = _VERSION;
         info.website_name = Resources.WEBSITE_NAME;
@@ -353,8 +354,8 @@ public class YouTubePublisher : Publishing.RESTSupport.GooglePublisher {
         Gtk.Builder builder = new Gtk.Builder();
 
         try {
-            builder.add_from_file(
-                get_host().get_module_file().get_parent().get_child("youtube_publishing_options_pane.glade").get_path());
+            builder.add_from_resource (Resources.RESOURCE_PATH +
+                    "/youtube_publishing_options_pane.ui");
         } catch (Error e) {
             warning("Could not parse UI file! Error: %s.", e.message);
             get_host().post_error(
@@ -592,7 +593,7 @@ internal class UploadTransaction : Publishing.RESTSupport.GooglePublisher.Authen
         // create a message that can be sent over the wire whose payload is the multipart container
         // that we've been building up
         Soup.Message outbound_message =
-            soup_form_request_new_from_multipart(get_endpoint_url(), message_parts);
+            Soup.Form.request_new_from_multipart(get_endpoint_url(), message_parts);
         outbound_message.request_headers.append("X-GData-Key", "key=%s".printf(DEVELOPER_KEY));
         outbound_message.request_headers.append("Slug",
             publishable.get_param_string(Spit.Publishing.Publishable.PARAM_STRING_BASENAME));

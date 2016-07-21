@@ -1,4 +1,4 @@
-/* Copyright 2009-2015 Yorba Foundation
+/* Copyright 2016 Software Freedom Conservancy Inc.
  *
  * This software is licensed under the GNU Lesser General Public License
  * (version 2.1 or later).  See the COPYING file in this distribution.
@@ -11,7 +11,8 @@ public class PicasaService : Object, Spit.Pluggable, Spit.Publishing.Service {
     
     public PicasaService(GLib.File resource_directory) {
         if (icon_pixbuf_set == null)
-            icon_pixbuf_set = Resources.load_icon_set(resource_directory.get_child(ICON_FILENAME));
+            icon_pixbuf_set =
+                Resources.load_from_resource(Resources.RESOURCE_PATH + "/" + ICON_FILENAME);
     }
 
     public int get_pluggable_interface(int min_host_interface, int max_host_interface) {
@@ -29,7 +30,7 @@ public class PicasaService : Object, Spit.Pluggable, Spit.Publishing.Service {
     
     public void get_info(ref Spit.PluggableInfo info) {
         info.authors = "Lucas Beeler";
-        info.copyright = _("Copyright 2009-2015 Yorba Foundation");
+        info.copyright = _("Copyright 2016 Software Freedom Conservancy Inc.");
         info.translators = Resources.TRANSLATORS;
         info.version = _VERSION;
         info.website_name = Resources.WEBSITE_NAME;
@@ -351,9 +352,8 @@ public class PicasaPublisher : Publishing.RESTSupport.GooglePublisher {
         try {
             // the trailing get_path() is required, since add_from_file can't cope
             // with File objects directly and expects a pathname instead.
-            builder.add_from_file(
-                get_host().get_module_file().get_parent().
-                get_child("picasa_publishing_options_pane.glade").get_path());
+            builder.add_from_resource(Resources.RESOURCE_PATH + "/" +
+                "picasa_publishing_options_pane.ui");
         } catch (Error e) {
             warning("Could not parse UI file! Error: %s.", e.message);
             get_host().post_error(
@@ -588,7 +588,7 @@ internal class UploadTransaction :
         // create a message that can be sent over the wire whose payload is the multipart container
         // that we've been building up
         Soup.Message outbound_message =
-            soup_form_request_new_from_multipart(get_endpoint_url(), message_parts);
+            Soup.Form.request_new_from_multipart(get_endpoint_url(), message_parts);
         outbound_message.request_headers.append("Authorization", "Bearer " +
             session.get_access_token());
         set_message(outbound_message);

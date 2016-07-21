@@ -1,4 +1,4 @@
-/* Copyright 2010-2015 Yorba Foundation
+/* Copyright 2016 Software Freedom Conservancy Inc.
  *
  * This software is licensed under the GNU Lesser General Public License
  * (version 2.1 or later).  See the COPYING file in this distribution.
@@ -163,7 +163,7 @@ public class ProcessedImage {
     public ushort colors;
     public ushort bits;
     public uint data_size;
-    [CCode (array_length=false)]
+    [CCode (array_length_cname="data_size")]
     public uint8[] data;
 }
 

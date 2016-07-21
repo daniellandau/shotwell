@@ -1,12 +1,26 @@
-/* Copyright 2009-2015 Yorba Foundation
+/* Copyright 2016 Software Freedom Conservancy Inc.
  *
  * This software is licensed under the GNU Lesser General Public License
  * (version 2.1 or later).  See the COPYING file in this distribution.
  */
 
-extern Soup.Message soup_form_request_new_from_multipart(string uri, Soup.Multipart multipart);
-
 namespace Publishing.RESTSupport {
+
+// Ported from librest
+// https://git.gnome.org/browse/librest/tree/rest/sha1.c?id=e412da58080eec2e771482e7e4c509b9e71477ff#n38
+
+internal const int SHA1_HMAC_LENGTH = 20;
+
+public string hmac_sha1(string key, string message) {
+    uint8 buffer[SHA1_HMAC_LENGTH];
+    size_t len = SHA1_HMAC_LENGTH;
+
+    var mac = new Hmac (ChecksumType.SHA1, key.data);
+    mac.update (message.data);
+    mac.get_digest (buffer, ref len);
+
+    return Base64.encode (buffer[0:len]);
+}
 
 public abstract class Session {
     private string? endpoint_url = null;
@@ -20,6 +34,7 @@ public abstract class Session {
     public Session(string? endpoint_url = null) {
         this.endpoint_url = endpoint_url;
         soup_session = new Soup.SessionAsync();
+        this.soup_session.ssl_use_system_ca_file = true;
     }
     
     protected void notify_wire_message_unqueued(Soup.Message message) {
@@ -108,12 +123,16 @@ public class Argument {
     }
     
     public static Argument[] sort(Argument[] inputArray) {
-        FixedTreeSet<Argument> sorted_args = new FixedTreeSet<Argument>(Argument.compare);
+        Gee.TreeSet<Argument> sorted_args = new Gee.TreeSet<Argument>(Argument.compare);
 
         foreach (Argument arg in inputArray)
             sorted_args.add(arg);
 
         return sorted_args.to_array();
+    }
+
+    public string to_string () {
+        return "%s=%s".printf (this.key, this.value);
     }
 }
 
@@ -297,7 +316,7 @@ public class Transaction {
         // concatenate the REST arguments array into an HTTP formdata string
         string formdata_string = "";
         for (int i = 0; i < arguments.length; i++) {
-            formdata_string += ("%s=%s".printf(arguments[i].key, arguments[i].value));
+            formdata_string += arguments[i].to_string ();
             if (i < arguments.length - 1)
                 formdata_string += "&";
         }
@@ -336,6 +355,11 @@ public class Transaction {
     public unowned Soup.MessageHeaders get_response_headers() {
         assert(get_is_executed());
         return message.response_headers;
+    }
+
+    public Soup.Message get_message() {
+        assert(get_is_executed());
+        return message;
     }
    
     public void add_argument(string name, string value) {
@@ -436,7 +460,7 @@ public class UploadTransaction : Transaction {
         image_part_header.set_content_disposition("form-data", binary_disposition_table);
 
         Soup.Message outbound_message =
-            soup_form_request_new_from_multipart(get_endpoint_url(), message_parts);
+            Soup.Form.request_new_from_multipart(get_endpoint_url(), message_parts);
         // TODO: there must be a better way to iterate over a map
         Gee.MapIterator<string, string> i = message_headers.map_iterator();
         bool cont = i.next();
@@ -561,7 +585,7 @@ public string decimal_entity_encode(string source) {
     return encoded_str_builder.str;
 }
 
-internal abstract class BatchUploader {
+public abstract class BatchUploader {
     private int current_file = 0;
     private Spit.Publishing.Publishable[] publishables = null;
     private Session session = null;
@@ -658,20 +682,6 @@ public string asciify_string(string s) {
     return b.str;
 }
 
-/** @brief Work-around for a problem in libgee where a TreeSet can leak references when it
- * goes out of scope; please see https://bugzilla.gnome.org/show_bug.cgi?id=695045 for more
- * details. This class merely wraps it and adds a call to clear() to the destructor.
- */
-public class FixedTreeSet<G> : Gee.TreeSet<G> {
-    public FixedTreeSet(owned CompareDataFunc<G>? comp_func = null) {
-        base((owned) comp_func);
-    }
-    
-    ~FixedTreeSet() {
-        clear();
-    }
-}
-
 public abstract class GoogleSession : Session {
     public abstract string get_user_name();
     public abstract string get_access_token();
@@ -725,7 +735,6 @@ public abstract class GooglePublisher : Object, Spit.Publishing.Publisher {
         
         private WebKit.WebView webview;
         private Gtk.Box pane_widget;
-        private Gtk.ScrolledWindow webview_frame;
         private string auth_sequence_start_url;
 
         public signal void authorized(string auth_code);
@@ -735,26 +744,20 @@ public abstract class GooglePublisher : Object, Spit.Publishing.Publisher {
 
             pane_widget = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
 
-            webview_frame = new Gtk.ScrolledWindow(null, null);
-            webview_frame.set_shadow_type(Gtk.ShadowType.ETCHED_IN);
-            webview_frame.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC);
-
             webview = new WebKit.WebView();
             webview.get_settings().enable_plugins = false;
-            webview.get_settings().enable_default_context_menu = false;
 
-            webview.load_finished.connect(on_page_load);
-            webview.load_started.connect(on_load_started);
+            webview.load_changed.connect(on_page_load_changed);
+            webview.context_menu.connect(() => { return false; });
 
-            webview_frame.add(webview);
-            pane_widget.pack_start(webview_frame, true, true, 0);
+            pane_widget.pack_start(webview, true, true, 0);
         }
         
         public static bool is_cache_dirty() {
             return cache_dirty;
         }
         
-        private void on_page_load(WebKit.WebFrame origin_frame) {
+        private void on_page_load() {
             pane_widget.get_window().set_cursor(new Gdk.Cursor(Gdk.CursorType.LEFT_PTR));
             
             string page_title = webview.get_title();
@@ -772,8 +775,21 @@ public abstract class GooglePublisher : Object, Spit.Publishing.Publisher {
             }
         }
 
-        private void on_load_started(WebKit.WebFrame frame) {
+        private void on_load_started() {
             pane_widget.get_window().set_cursor(new Gdk.Cursor(Gdk.CursorType.WATCH));
+        }
+
+        private void on_page_load_changed (WebKit.LoadEvent load_event) {
+            switch (load_event) {
+                case WebKit.LoadEvent.STARTED:
+                    on_load_started();
+                    break;
+                case WebKit.LoadEvent.FINISHED:
+                    on_page_load();
+                    break;
+            }
+
+            return;
         }
         
         public Spit.Publishing.DialogPane.GeometryOptions get_preferred_geometry() {
@@ -785,7 +801,7 @@ public abstract class GooglePublisher : Object, Spit.Publishing.Publisher {
         }
 
         public void on_pane_installed() {
-            webview.open(auth_sequence_start_url);
+            webview.load_uri(auth_sequence_start_url);
         }
 
         public void on_pane_uninstalled() {

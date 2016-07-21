@@ -1,4 +1,4 @@
-/* Copyright 2011-2015 Yorba Foundation
+/* Copyright 2016 Software Freedom Conservancy Inc.
  *
  * This software is licensed under the GNU Lesser General Public License
  * (version 2.1 or later).  See the COPYING file in this distribution.
@@ -23,7 +23,7 @@ public class FSpotPhotoVersionRow : Object {
  * This class represents the F-Spot photo_versions table.
  */
 public class FSpotPhotoVersionsTable : FSpotDatabaseTable<FSpotPhotoVersionRow> {
-    public static const string TABLE_NAME = "Photo_versions";
+    public const string TABLE_NAME = "Photo_versions";
 
     public FSpotPhotoVersionsTable(Sqlite.Database db, FSpotDatabaseBehavior db_behavior) {
         base(db);

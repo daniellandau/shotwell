@@ -1,4 +1,4 @@
-/* Copyright 2009-2015 Yorba Foundation
+/* Copyright 2016 Software Freedom Conservancy Inc.
  *
  * This software is licensed under the GNU Lesser General Public License
  * (version 2.1 or later).  See the COPYING file in this distribution.
@@ -11,7 +11,8 @@ public class PiwigoService : Object, Spit.Pluggable, Spit.Publishing.Service {
     
     public PiwigoService(GLib.File resource_directory) {
         if (icon_pixbuf_set == null)
-            icon_pixbuf_set = Resources.load_icon_set(resource_directory.get_child(ICON_FILENAME));
+            icon_pixbuf_set = Resources.load_from_resource
+                (Resources.RESOURCE_PATH + "/" + ICON_FILENAME);
     }
     
     public int get_pluggable_interface(int min_host_interface, int max_host_interface) {
@@ -29,7 +30,7 @@ public class PiwigoService : Object, Spit.Pluggable, Spit.Publishing.Service {
     
     public void get_info(ref Spit.PluggableInfo info) {
         info.authors = "Bruno Girin";
-        info.copyright = _("Copyright 2009-2015 Yorba Foundation");
+        info.copyright = _("Copyright 2016 Software Freedom Conservancy Inc.");
         info.translators = Resources.TRANSLATORS;
         info.version = _VERSION;
         info.website_name = Resources.WEBSITE_NAME;
@@ -63,7 +64,7 @@ internal class Category {
     public string comment;
     public string display_name;
     public string uppercats;
-    public static const int NO_ID = -1;
+    public const int NO_ID = -1;
 
     public Category(int id, string name, string uppercats, string? comment = "") {
         this.id = id;
@@ -937,29 +938,18 @@ public class PiwigoPublisher : Spit.Publishing.Publisher, GLib.Object {
      * @param txn the received transaction
      * @return the value of pwg_id if present or null if not found
      */
-    private new string? get_pwg_id_from_transaction(Publishing.RESTSupport.Transaction txn) {
-        string cookie = txn.get_response_headers().get_list("Set-Cookie");
-        string pwg_id = null;
-        debug("Full cookie string: %s".printf(cookie));
-        if (!is_string_empty(cookie)) {
-            string[] cookie_segments = cookie.split(";");
-            debug("Split full string into %d individual segments".printf(cookie_segments.length));
-            foreach(string cookie_segment in cookie_segments) {
-                debug("Individual cookie segment: %s".printf(cookie_segment));
-                string[] cookie_sub_segments = cookie_segment.split(",");
-                debug("Split segment into %d individual sub-segments".printf(cookie_sub_segments.length));
-                foreach(string cookie_sub_segment in cookie_sub_segments) {
-                    debug("Individual cookie sub-segment: %s".printf(cookie_sub_segment));
-                    string[] cookie_kv = cookie_sub_segment.split("=");
-                    debug("Split sub-segment into %d chunks".printf(cookie_kv.length));
-                    if (cookie_kv.length > 1 && cookie_kv[0].strip() == "pwg_id") {
-                        debug("Found pwg_id: %s".printf(cookie_kv[1].strip()));
-                        pwg_id = cookie_kv[1].strip();
-                    }
-                }
+    private string? get_pwg_id_from_transaction(Publishing.RESTSupport.Transaction txn) {
+        string? pwg_id = null;
+
+        foreach (var cookie in Soup.cookies_from_response(txn.get_message())) {
+            if (cookie.get_name() == "pwg_id") {
+                // Collect all ids, last one is the one to use. First one is
+                // for Guest apparently
+                pwg_id = cookie.get_value();
+                debug ("Found pwg_id %s", pwg_id);
             }
         }
-        
+
         return pwg_id;
     }
 }
@@ -1012,12 +1002,9 @@ internal class AuthenticationPane : Spit.Publishing.DialogPane, Object {
     public AuthenticationPane(PiwigoPublisher publisher, Mode mode = Mode.INTRO) {
         this.pane_widget = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
 
-        File ui_file = publisher.get_host().get_module_file().get_parent().
-            get_child("piwigo_authentication_pane.glade");
-        
         try {
             builder = new Gtk.Builder();
-            builder.add_from_file(ui_file.get_path());
+            builder.add_from_resource (Resources.RESOURCE_PATH + "/piwigo_authentication_pane.ui");
             builder.connect_signals(null);
             Gtk.Alignment align = builder.get_object("alignment") as Gtk.Alignment;
             
@@ -1093,11 +1080,9 @@ internal class AuthenticationPane : Spit.Publishing.DialogPane, Object {
     }
     
     private void update_login_button_sensitivity() {
-        login_button.set_sensitive(
-            !is_string_empty(url_entry.get_text()) &&
-            !is_string_empty(username_entry.get_text()) &&
-            !is_string_empty(password_entry.get_text())
-        );
+        login_button.set_sensitive(url_entry.text_length != 0 &&
+                                   username_entry.text_length != 0 &&
+                                   password_entry.text_length != 0);
     }
     
     public Gtk.Widget get_widget() {
@@ -1169,12 +1154,9 @@ internal class PublishingOptionsPane : Spit.Publishing.DialogPane, Object {
         this.last_title_as_comment = last_title_as_comment;
         this.last_no_upload_tags = last_no_upload_tags;
 
-        File ui_file = publisher.get_host().get_module_file().get_parent().
-            get_child("piwigo_publishing_options_pane.glade");
-        
         try {
             builder = new Gtk.Builder();
-            builder.add_from_file(ui_file.get_path());
+            builder.add_from_resource (Resources.RESOURCE_PATH + "/piwigo_publishing_options_pane.ui");
             builder.connect_signals(null);
             Gtk.Alignment align = builder.get_object("alignment") as Gtk.Alignment;
             
@@ -1325,7 +1307,7 @@ internal class PublishingOptionsPane : Spit.Publishing.DialogPane, Object {
             !(
                 create_new_radio.get_active() &&
                 (
-                    is_string_empty(category_name) ||
+                    category_name != "" ||
                     category_already_exists(search_name)
                 )
             )
@@ -1669,12 +1651,7 @@ private class ImagesAddTransaction : Publishing.RESTSupport.UploadTransaction {
         string[] keywords = publishable.get_publishing_keywords();
         string tags = "";
         if (keywords != null) {
-            foreach (string tag in keywords) {
-                if (!is_string_empty(tags)) {
-                    tags += ",";
-                }
-                tags += tag;
-            }
+            tags = string.joinv (",", keywords);
         }
         
         debug("PiwigoConnector: Uploading photo %s to category id %d with perm level %d",
@@ -1683,16 +1660,16 @@ private class ImagesAddTransaction : Publishing.RESTSupport.UploadTransaction {
         string name = publishable.get_publishing_name();
         string comment = publishable.get_param_string(
             Spit.Publishing.Publishable.PARAM_STRING_COMMENT);
-        if (is_string_empty(name)) {
+        if (name != "") {
             name = publishable.get_param_string(
                 Spit.Publishing.Publishable.PARAM_STRING_BASENAME);
             add_argument("name", name);
-            if (!is_string_empty(comment)) {
+            if (comment != null && comment != "") {
                 add_argument("comment", comment);
             }
         } else {
             // name is set
-            if (!is_string_empty(comment)) {
+            if (comment != null && comment != "") {
                 add_argument("name", name);
                 add_argument("comment", comment);
             } else {
@@ -1710,7 +1687,7 @@ private class ImagesAddTransaction : Publishing.RESTSupport.UploadTransaction {
         add_argument("category", parameters.category.id.to_string());
         add_argument("level", parameters.perm_level.id.to_string());
         if (!parameters.no_upload_tags)
-            if (!is_string_empty(tags))
+            if (tags != "")
                 add_argument("tags", tags);
         // TODO: update the Publishable interface so that it gives access to
         // the image's meta-data where the author (artist) is kept

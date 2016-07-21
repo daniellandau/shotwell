@@ -1,4 +1,4 @@
-/* Copyright 2010-2015 Yorba Foundation
+/* Copyright 2016 Software Freedom Conservancy Inc.
  *
  * This software is licensed under the GNU Lesser General Public License
  * (version 2.1 or later).  See the COPYING file in this distribution.
@@ -125,7 +125,8 @@ public class ProcessedImage {
         // to be decoded before being useful.  This will throw an error if the format is not
         // supported
         try {
-            pixbuf = new Gdk.Pixbuf.from_stream(new MemoryInputStream.from_data(image.data, null),
+            var bytes = new Bytes.static (image.data);
+            pixbuf = new Gdk.Pixbuf.from_stream(new MemoryInputStream.from_bytes(bytes),
                 null);
         } catch (Error err) {
             throw new Exception.UNSUPPORTED_THUMBNAIL(err.message);

@@ -6,7 +6,6 @@
  */
 
 
-extern string hmac_sha1(string key, string message);
 public class TumblrService : Object, Spit.Pluggable, Spit.Publishing.Service {
    private const string ICON_FILENAME = "tumblr.png";
 
@@ -14,7 +13,9 @@ public class TumblrService : Object, Spit.Pluggable, Spit.Publishing.Service {
     
     public TumblrService(GLib.File resource_directory) {
         if (icon_pixbuf_set == null)
-            icon_pixbuf_set = Resources.load_icon_set(resource_directory.get_child(ICON_FILENAME));
+            icon_pixbuf_set =
+                Resources.load_from_resource(Resources.RESOURCE_PATH + "/" +
+                        ICON_FILENAME);
     }
 
     public int get_pluggable_interface(int min_host_interface, int max_host_interface) {
@@ -597,12 +598,9 @@ internal class AuthenticationPane : Spit.Publishing.DialogPane, Object {
     public AuthenticationPane(TumblrPublisher publisher, Mode mode = Mode.INTRO) {
         this.pane_widget = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
 
-        File ui_file = publisher.get_host().get_module_file().get_parent().
-            get_child("tumblr_authentication_pane.glade");
-        
         try {
             builder = new Gtk.Builder();
-            builder.add_from_file(ui_file.get_path());
+            builder.add_from_resource (Resources.RESOURCE_PATH + "/tumblr_authentication_pane.ui");
             builder.connect_signals(null);
             Gtk.Alignment align = builder.get_object("alignment") as Gtk.Alignment;
             
@@ -656,10 +654,8 @@ internal class AuthenticationPane : Spit.Publishing.DialogPane, Object {
     }
     
     private void update_login_button_sensitivity() {
-        login_button.set_sensitive(
-            !is_string_empty(username_entry.get_text()) &&
-            !is_string_empty(password_entry.get_text())
-        );
+        login_button.set_sensitive(username_entry.text_length > 0 &&
+                                   password_entry.text_length > 0);
     }
     
     public Gtk.Widget get_widget() {
@@ -717,12 +713,11 @@ internal class PublishingOptionsPane : Spit.Publishing.DialogPane, GLib.Object {
 		this.media_type = media_type;
 		this.sizes = sizes;
 		this.blogs=blogs;
-        File ui_file = publisher.get_host().get_module_file().get_parent().
-            get_child("tumblr_publishing_options_pane.glade");
-        
+
         try {
 			builder = new Gtk.Builder();
-			builder.add_from_file(ui_file.get_path());
+			builder.add_from_resource (Resources.RESOURCE_PATH +
+                    "/tumblr_publishing_options_pane.ui");
 			builder.connect_signals(null);
 
 			// pull in the necessary widgets from the glade file
@@ -954,12 +949,7 @@ internal class UploadTransaction : Publishing.RESTSupport.UploadTransaction {
 			string[] keywords = base.publishable.get_publishing_keywords();
 			string tags = "";
 			if (keywords != null) {
-				foreach (string tag in keywords) {
-				if (!is_string_empty(tags)) {
-					tags += ",";
-				}
-				tags += tag;
-				}
+                tags = string.joinv (",", keywords);
 			}
 			add_argument("tags", Soup.URI.encode(tags, ENCODE_RFC_3986_EXTRA));
 
@@ -1105,7 +1095,7 @@ internal class Session : Publishing.RESTSupport.Session {
         debug("signing key = '%s'", signing_key);
 
         // compute the signature
-        string signature = hmac_sha1(signing_key, signature_base_string);
+        string signature = Publishing.RESTSupport.hmac_sha1(signing_key, signature_base_string);
         debug("signature = '%s'", signature);
         signature = Soup.URI.encode(signature, ENCODE_RFC_3986_EXTRA);
 

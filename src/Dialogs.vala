@@ -1,4 +1,4 @@
-/* Copyright 2009-2015 Yorba Foundation
+/* Copyright 2016 Software Freedom Conservancy Inc.
  *
  * This software is licensed under the GNU LGPL (version 2.1 or later).
  * See the COPYING file in this distribution.
@@ -168,7 +168,9 @@ public class ExportDialog : Gtk.Dialog {
     private bool in_insert = false;
     
     public ExportDialog(string title) {
-        Object (use_header_bar: 1);
+        bool use_header;
+        Gtk.Settings.get_default ().get ("gtk-dialogs-use-header", out use_header);
+        Object (use_header_bar: use_header ? 1 : 0);
         
         this.title = title;
         resizable = false;
@@ -1111,7 +1113,7 @@ public abstract class SetBackgroundDialog {
 public class SetBackgroundPhotoDialog : SetBackgroundDialog {
     
     public SetBackgroundPhotoDialog() {
-        Gtk.Builder builder = AppWindow.create_builder("set_background_dialog.glade", this);
+        Gtk.Builder builder = AppWindow.create_builder("set_background_dialog.ui", this);
         base(builder);
     }
     
@@ -1131,7 +1133,7 @@ public class SetBackgroundSlideshowDialog : SetBackgroundDialog {
     private int delay_value = 0;
     
     public SetBackgroundSlideshowDialog() {
-        Gtk.Builder builder = AppWindow.create_builder("set_background_slideshow_dialog.glade", this);
+        Gtk.Builder builder = AppWindow.create_builder("set_background_slideshow_dialog.ui", this);
         base(builder);
         
         delay_value_label = builder.get_object("delay_value_label") as Gtk.Label;
@@ -1191,7 +1193,9 @@ public class TextEntryDialog : Gtk.Dialog {
     private Gtk.ButtonBox action_area_box;
     
     public TextEntryDialog() {
-        Object (use_header_bar: 1);
+        bool use_header;
+        Gtk.Settings.get_default ().get ("gtk-dialogs-use-header", out use_header);
+        Object (use_header_bar: use_header ? 1 : 0);
     }
     
     public void set_builder(Gtk.Builder builder) {
@@ -1264,7 +1268,9 @@ public class MultiTextEntryDialog : Gtk.Dialog {
     private Gtk.ButtonBox action_area_box;
     
     public MultiTextEntryDialog() {
-        Object (use_header_bar: 1);
+        bool use_header;
+        Gtk.Settings.get_default ().get ("gtk-dialogs-use-header", out use_header);
+        Object (use_header_bar: use_header ? 1 : 0);
     }
     
     public void set_builder(Gtk.Builder builder) {
@@ -1323,7 +1329,7 @@ public class EventRenameDialog : TextEntryDialogMediator {
 public class EditTitleDialog : TextEntryDialogMediator {
     public EditTitleDialog(string? photo_title) {
         // Dialog title
-        base (_("Edit Title"),
+        base (C_("Dialog Title", "Edit Title"),
             _("Title:"), photo_title);
     }
     
@@ -1649,7 +1655,9 @@ public class AdjustDateTimeDialog : Gtk.Dialog {
         bool contains_video = false, bool only_video = false) {
         assert(source != null);
 
-        Object(use_header_bar: 1);
+        bool use_header;
+        Gtk.Settings.get_default ().get ("gtk-dialogs-use-header", out use_header);
+        Object(use_header_bar: use_header ? 1 : 0);
         
         set_modal(true);
         set_resizable(false);
@@ -1966,7 +1974,9 @@ public abstract class TagsDialog : TextEntryDialogMediator {
 
 public class AddTagsDialog : TagsDialog {
     public AddTagsDialog() {
-        base (Resources.ADD_TAGS_TITLE, _("Tags (separated by commas):"));
+        var title = GLib.dpgettext2 (null, "Dialog Title",
+                Resources.ADD_TAGS_TITLE);
+        base (title, _("Tags (separated by commas):"));
     }
 
     public string[]? execute() {
@@ -2086,7 +2096,7 @@ public class WelcomeDialog : Gtk.Dialog {
         secondary_text.set_markup("<span weight=\"normal\">%s</span>".printf(
             _("To get started, import photos in any of these ways:")));
         secondary_text.set_alignment(0, 0.5f);
-        Gtk.Image image = new Gtk.Image.from_pixbuf(Resources.get_icon(Resources.ICON_APP, 50));
+        var image = new Gtk.Image.from_icon_name ("shotwell", Gtk.IconSize.DIALOG);
         
         Gtk.Box header_text = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
         header_text.pack_start(primary_text, false, false, 5);
@@ -2278,6 +2288,12 @@ public class PreferencesDialog {
         builder = AppWindow.create_builder();
         
         dialog = builder.get_object("preferences_dialog") as Gtk.Dialog;
+        bool use_header;
+        Gtk.Settings.get_default ().get ("gtk-dialogs-use-header", out use_header);
+        if (!use_header) {
+            Gtk.Widget null_titlebar = null;
+            dialog.set_titlebar (null_titlebar);
+        }
         dialog.set_parent_window(AppWindow.get_instance().get_parent_window());
         dialog.set_transient_for(AppWindow.get_instance());
         dialog.delete_event.connect(on_delete);
@@ -2311,7 +2327,7 @@ public class PreferencesDialog {
             pattern_help.set_markup("<a href=\"" + Resources.DIR_PATTERN_URI_SYSWIDE + "\">" + _("(Help)") + "</a>");
         } else {
             // We're being run from the build directory; we'll have to handle clicks to this
-            // link manually ourselves, due to a limitation ghelp: URIs.
+            // link manually ourselves, due to a limitation of help: URIs.
             pattern_help.set_markup("<a href=\"dummy:\">" + _("(Help)") + "</a>");
             pattern_help.activate_link.connect(on_local_pattern_help);
         }
@@ -2376,7 +2392,7 @@ public class PreferencesDialog {
     // the help viewer and specify the full path to the subsection we want...
     private bool on_local_pattern_help(string ignore) {
         try {
-            Resources.launch_help(AppWindow.get_instance().get_screen(), "?other-files");
+            Resources.launch_help(AppWindow.get_instance().get_screen(), "other-files.page");
         } catch (Error e) {
             message("Unable to launch help: %s", e.message);
         }

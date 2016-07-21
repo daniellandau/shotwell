@@ -1,3 +1,78 @@
+shotwell (0.23.2-1~jensge2~xenial1) xenial; urgency=medium
+
+  * Use yelp-build to generate HTML docs
+  * Remove gphoto-2.4 support
+  * Fix background color drawing (#766864)
+  * Port GtkNotebook to GtkStack (#744289)
+  * Fix missing scroll bars in events (#766864)
+  * Fix URLs in manpage
+  * Clean up external functions
+  * Port librest's internal hmac_sha1 implementation to Vala
+  * Fix multiplication of symbols in plugins
+  * Request "popup" login in Facebook
+  * Update help regarding publishing permissions in Facebook (#766919)
+  * Add source SVG for new app icons
+  * Update logo for help
+  * Remove executable flag on images
+  * Piwigo: Let libsoup parse the cookie
+  * Remove string utility functions in publishing plugins
+  * Remove a libgee work-around, bump to 0.10 minimum version
+  * Make filter toolbar buttons contain text and image
+  * Move commonly used functions into shared library to prevent multiple
+    definition of symbols
+
+ -- Jens Georg <mail@jensge.org>  Mon, 04 Jul 2016 22:06:16 +0200
+
+shotwell (0.23.1-1~jensge2~xenial1) xenial; urgency=medium
+
+  * Update Facebook application id. Facebook integration works again (#748991)
+  * Remove obsolete VAPIs
+  * Remove custom WEXITSTATUS implementation
+  * Fix an assert in file monitor caused by renaming a file (#759403)
+  * Rename "Yorba website" to "Shotwell website" in About dialog so it
+    actually says what it does.
+  * Change the way how shotwell checks whether it runs uninstalled to allow
+    running with symlinks (#747374)
+  * Copyright was transferred from Yorba to SFC
+  * Do not block closing the viewer if there was an issue loading the photo
+    (#740436)
+  * Remove remaining references to .gnome2 directory (#766339)
+  * Update icons to hires versions and add a symbolic one (#717326)
+  * If we can't find any pixbuf representation of the Photo, push an empty
+    pixmap to force the display of the error message (#766338)
+  * Fix a critical when get_metadata returns null
+  * Remove deprecated calls to gtk_widget_render_icon() (#719188)
+  * Panic out if we cannot open the file in the viewer
+  * Make toolbar use GtkOverlay instead of implementing a custom pop-up to
+    prevent all kinds of issues with overlaying other applications or
+    toolboxes (#756126)
+  * Remove criticals caused by mouse hiding algorithm
+
+ -- Jens Georg <mail@jensge.org>  Mon, 23 May 2016 21:04:00 +0200
+
+shotwell (0.23.0-1~xenial1) xenial; urgency=medium
+
+  * Allow thinner minimum sidebar (#718611)
+  * Check .cache directory for read/write permissions (#737747)
+  * Fix crash during metadata update (#739917)
+  * Fixed Crop Ribbon / Control not visible (#747201)
+  * Port to webkit2gtk-4.0 (#751709)
+  * Have all soup sessions validate TLS certificates
+  * Remove shell magic from Makefile
+  * Remove calls to Posix.system()
+  * Documentation fixes and improvements (#764800)
+  * Fix CSS issue introduced with previous CSS improvements (#747637)
+  * Don't use GtkHeaderBar on dialogs if the gtk-dialogs-use-header setting is
+    not set (#749874)
+  * Use proper umask to create XDG_USER_CACHE and XDG_USER_DATA when they not
+    exist (#765182)
+  * Don't build the plugin twice
+  * Call pkg-config only once, not every compiler call
+  * Fix parallel builds not to build plugins several times over
+  * Fix contradicting license in rejected.svg (#757643)
+
+ -- Jens Georg <mail@jensge.org>  Tue, 26 Apr 2016 18:50:55 +0200
+
 shotwell (0.22.0-1~vivid1) vivid; urgency=low
 
   * Improved metadata support for Facebook upload (#742163)

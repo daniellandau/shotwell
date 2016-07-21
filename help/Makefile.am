@@ -1,16 +1,20 @@
 # Dummy Makefile.am to allow the help to be translated on l10n.gnome.org.
 # This isn't actually processed by automake.
 
-DOC_ID = shotwell
+dist_man1_MANS = shotwell.1
 
-DOC_IMAGES = \
-	crop_thirds.jpg \
-	editing_overview.png \
-	edit_toolbar.png \
-	shotwell_logo.png \
-	trash_process.png
+@YELP_HELP_RULES@
 
-DOC_PAGES = \
+HELP_ID = shotwell
+
+HELP_MEDIA = \
+	figures/crop_thirds.jpg \
+	figures/editing_overview.png \
+	figures/edit_toolbar.png \
+	figures/shotwell_logo.png \
+	figures/trash_process.png
+
+HELP_FILES = \
 	edit-adjustments.page \
 	edit-crop.page \
 	edit-enhance.page \
@@ -19,7 +23,7 @@ DOC_PAGES = \
 	edit-redeye.page \
 	edit-rotate.page \
 	edit-straighten.page \
-	edit-time-date.page \
+	edit-date-time.page \
 	edit-undo.page \
 	formats.page \
 	import-camera.page \
@@ -50,4 +54,6 @@ DOC_PAGES = \
 	view-information.page \
 	view-sidebar.page
 
-DOC_LINGUAS = cs de el es hu sv
+HELP_LINGUAS = cs de el es hu pt_BR sv
+
+-include $(top_srcdir)/git.mk

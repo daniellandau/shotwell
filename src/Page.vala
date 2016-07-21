@@ -1,4 +1,4 @@
-/* Copyright 2009-2015 Yorba Foundation
+/* Copyright 2016 Software Freedom Conservancy Inc.
  *
  * This software is licensed under the GNU LGPL (version 2.1 or later).
  * See the COPYING file in this distribution.
@@ -1157,6 +1157,9 @@ public abstract class Page : Gtk.ScrolledWindow {
         if (event_source != null)
             event_source.get_window().set_cursor(new Gdk.Cursor(Gdk.CursorType.BLANK_CURSOR));
 
+        // We remove the timeout so reset the id
+        last_timeout_id = 0;
+
         return false;
     }
 }
@@ -1264,7 +1267,7 @@ public abstract class CheckerboardPage : Page {
     }
 
     protected virtual string get_filter_no_match_message() {
-        return _("No photos/videos found");
+        return _("No photos/videos found which match the current filter");
     }
 
     protected virtual void on_item_activated(CheckerboardItem item, Activator activator, 
