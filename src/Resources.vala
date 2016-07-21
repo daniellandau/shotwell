@@ -1103,7 +1103,7 @@ along with Shotwell; if not, write to the Free Software Foundation, Inc.,
                 /* -GtkWidget-focus-padding : 0px; */
             }
 
-            .button:prelight {
+            .button:hover {
                 background-color: #DDD;
             }
         """;
