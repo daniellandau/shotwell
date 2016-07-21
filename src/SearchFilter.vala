@@ -965,11 +965,9 @@ public class SearchFilterToolbar : Gtk.Revealer {
         }
         
         public void restyle() {
-            string bgcolorname =
-                Resources.to_css_color(Config.Facade.get_instance().get_bg_color());
-            string stylesheet = Resources.SEARCH_BUTTON_STYLESHEET_TEMPLATE.printf(bgcolorname);
-            
-            Resources.style_widget(button, stylesheet);
+			Resources.style_widget(button, Resources.SAVEDSEARCH_FILTER_BUTTON_STYLESHEET);
+			button.set_size_request(24, 24);
+			button.relief = Gtk.ReliefStyle.NONE;
         }
     }
 
@@ -1199,10 +1197,10 @@ public class SearchFilterToolbar : Gtk.Revealer {
         
         // Saved search label and button
         label_saved_search = new LabelToolItem(_("Saved Search"));
-        insert(label_saved_search, -1);
+        toolbar.insert(label_saved_search, -1);
         saved_search_button.set_expand(false);
         saved_search_button.clicked.connect(on_saved_search_button_clicked);
-        insert(saved_search_button, -1);
+        toolbar.insert(saved_search_button, -1);
         
         // Separator to right-align the text box
         Gtk.SeparatorToolItem separator_align = new Gtk.SeparatorToolItem();
