@@ -1210,6 +1210,7 @@ public class SearchFilterToolbar : Gtk.Revealer {
         // Saved search button
         saved_search_button.set_expand(false);
 		saved_search_button.set_label(_("Saved Search"));
+        saved_search_button.set_tooltip_text(_("Use a saved search to filter items in the current view"));
         saved_search_button.clicked.connect(on_saved_search_button_clicked);
         toolbar.insert(saved_search_button, -1);
         
