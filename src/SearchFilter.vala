@@ -973,7 +973,6 @@ public class SearchFilterToolbar : Gtk.Revealer {
         }
         
         public void restyle() {
-			Resources.style_widget(button, Resources.SAVEDSEARCH_FILTER_BUTTON_STYLESHEET);
 			button.set_size_request(24, 24);
 			button.relief = Gtk.ReliefStyle.NONE;
         }
@@ -1068,7 +1067,6 @@ public class SearchFilterToolbar : Gtk.Revealer {
         }
 
         public void restyle() {
-            Resources.style_widget(add, Resources.SAVEDSEARCH_FILTER_BUTTON_STYLESHEET);
             add.relief = Gtk.ReliefStyle.NONE;
             foreach (DataButton button in edit_buttons) button.restyle();
             foreach (DataButton button in delete_buttons) button.restyle();
