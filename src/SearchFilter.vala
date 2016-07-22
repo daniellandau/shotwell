@@ -1014,7 +1014,6 @@ public class SearchFilterToolbar : Gtk.Revealer {
             }
 
             public void restyle() {
-                Resources.style_widget(button, Resources.SAVEDSEARCH_FILTER_BUTTON_STYLESHEET);
                 button.set_size_request(24, 24);
                 button.relief = Gtk.ReliefStyle.NONE;
             }

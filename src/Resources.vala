@@ -1090,23 +1090,6 @@ along with Shotwell; if not, write to the Free Software Foundation, Inc.,
                border-style: solid;
                border-color: @borders;
             }""";
-
-    public const string SAVEDSEARCH_FILTER_BUTTON_STYLESHEET =
-        """
-            .button {
-                background-image: none;
-                border-style: none;
-                /* -GtkButton-default-border : 0px; */
-                /* -GtkButton-default-outside-border : 0px; */
-                /* -GtkButton-inner-border: 0px; */
-                /* -GtkWidget-focus-line-width : 0px; */
-                /* -GtkWidget-focus-padding : 0px; */
-            }
-
-            .button:hover {
-                background-color: #DDD;
-            }
-        """;
     
     public const string ONIMAGE_FONT_COLOR = "#000000";
     public const string ONIMAGE_FONT_BACKGROUND = "rgba(255,255,255,0.5)";
